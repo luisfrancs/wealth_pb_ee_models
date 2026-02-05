@@ -18,21 +18,13 @@ authors = [
     { name = "Luis", email = "luis@example.com" }
 ]
 license = { text = "MIT" }
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Intended Audience :: Science/Research",
-    "Topic :: Scientific/Engineering :: Medical Science Apps."
-]
 
 [tool.setuptools]
-# This explicit mapping helps pip find the package in 'src' during editable installs
-package-dir = { "" = "src" }
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
 namespaces = false
 
 [tool.setuptools.package-data]
-# Using the asterisk pattern is fine, but ensure the folder name matches your actual folder in src/
 "*" = ["**/*.csv", "**/*.json", "**/*.yaml", "**/*.yml", "**/*.txt", "**/*.pkl", "**/*.joblib", "**/*.h5", "**/*.pt"]
