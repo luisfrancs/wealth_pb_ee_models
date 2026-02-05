@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -13,36 +13,26 @@ dependencies = [
     "pandas",
     "scikit-learn",
     "joblib",
-    "pygt3x"
 ]
 authors = [
-    { name = "Luis Sigcha", email = "luisfrancs@gmail.com" }
+    { name = "Luis", email = "luis@example.com" }
 ]
 license = { text = "MIT" }
 classifiers = [
     "Programming Language :: Python :: 3",
     "Intended Audience :: Science/Research",
-    "Topic :: Scientific/Engineering :: Medical Science Apps"
+    "Topic :: Scientific/Engineering :: Medical Science Apps."
 ]
 
 [tool.setuptools]
+# This explicit mapping helps pip find the package in 'src' during editable installs
 package-dir = { "" = "src" }
 include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+namespaces = false
 
 [tool.setuptools.package-data]
-wealth_pa_ee_models = [
-    "models/**/*",
-    "sample_data/**/*",
-    "**/*.csv",
-    "**/*.json",
-    "**/*.yaml",
-    "**/*.yml",
-    "**/*.txt",
-    "**/*.pkl",
-    "**/*.joblib",
-    "**/*.h5",
-    "**/*.pt"
-]
+# Using the asterisk pattern is fine, but ensure the folder name matches your actual folder in src/
+"*" = ["**/*.csv", "**/*.json", "**/*.yaml", "**/*.yml", "**/*.txt", "**/*.pkl", "**/*.joblib", "**/*.h5", "**/*.pt"]
