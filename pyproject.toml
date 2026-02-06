@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "WEALTH_PB_EE_MODELS"
+name = "wealth_pb_ee_models"
 version = "0.1.0"
-description = "WEALTH physical activity and energy expenditure models and utilities"
+description = "WEALTH project physical activity and energy expenditure models and utilities"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
