@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "WEALTH_PB_EE_MODELS"
+version = "0.1.0"
+description = "WEALTH physical activity and energy expenditure models and utilities"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "joblib",
+]
+authors = [
+    { name = "Luis", email = "luisfrancs@gmail.com" }
+]
+license = { text = "MIT" }
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+namespaces = false
+
+[tool.setuptools.package-data]
+"*" = ["**/*.csv", "**/*.json", "**/*.yaml", "**/*.yml", "**/*.txt", "**/*.pkl", "**/*.joblib", "**/*.h5", "**/*.pt"]
