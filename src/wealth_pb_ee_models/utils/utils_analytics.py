@@ -12,7 +12,18 @@ from functools import reduce
 def minutes_summary(df, encoding_dict, ACTIVITY_ORDER, analytics="activity", plot=True):
     df = df.copy()
     # ---- time handling ----
-    df['Time'] = pd.to_datetime(df['Time'], unit='d', origin='1899-12-30')
+    if pd.api.types.is_datetime64_any_dtype(df["Time"]):
+        # already datetime, do nothing (or ensure tz-naive)
+        df["Time"] = pd.to_datetime(df["Time"])
+    else:
+        # try numeric Excel serial days first
+        if pd.api.types.is_numeric_dtype(df["Time"]):
+            df["Time"] = pd.to_datetime(df["Time"], unit="d", origin="1899-12-30")
+        else:
+            # fallback: parse strings
+            df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
+    
+    # ---- time to data----
     df['date'] = df['Time'].dt.date
     # ---- aggregation ----
     window_size_in_minutes = 10 / 60
