@@ -109,15 +109,22 @@ def predict_single_file_AP_DATX(file_name, model, encoding_dict,batch_size=512):
     window_size=200 #60=3 seconds at 20 Hz
     X,time_stamps=load_data_AP_DATX(file_name=file_name)#load AP data file
     y_predict_proba=predict_PA(X, model,scaling_factor=1,window_size=window_size,step_size=window_size)#predict
-    predictions=post_process(y_predict_proba)#POST-PROCESSING
+    #Physical Behaviour
+    y_predict_proba_PB=y_predict_proba['task_1']
+    predictions_PB=post_process(y_predict_proba_PB)#POST-PROCESSING
+    #ENERGY EXPENDITURE
+    y_predict_proba_EE=y_predict_proba['task_2']
+    predictions_EE=post_process(y_predict_proba_EE)#POST-PROCESSING
     # Convert window prediction to df (window based prediction)
-    croped_shape=window_size*predictions.shape[0]
+    croped_shape=window_size*predictions_PB.shape[0]
     cp_time_stamps = time_stamps[0:croped_shape]#crop to size
     nu_time_stamps=cp_time_stamps[::window_size]#downsample time stamps
     X=X[0:croped_shape,:]#crop to size
     # Convert the NumPy array to a Pandas DataFrame
-    df = pd.DataFrame({'Time': nu_time_stamps, 'activity': predictions})# Step 4: Transform using the mapping dictionary
-    df['activity'] = df['activity'].map(encoding_dict)#encode numeric predictions to class
+    df = pd.DataFrame({'Time': nu_time_stamps, 'activity': predictions_PB, 'Energy_expenditure': predictions_EE})
+    #Transform using the mapping dictionary
+    df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
+    df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
     return df, X
 
 def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,batch_size=512):
