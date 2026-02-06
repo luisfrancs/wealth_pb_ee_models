@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 #from tensorflow.keras.models import model_from_json
 import warnings
 #import uos_update_LS
+from wealth_pb_ee_models.utils import uos_update_LS
+
 
 def load_data_AP_AG_CSV(file_name="file.cvs"):
     data = np.loadtxt(file_name, delimiter=",", skiprows=2,usecols=(0,1,2,3,4,5,6),max_rows=None)#modify to accpet all data
