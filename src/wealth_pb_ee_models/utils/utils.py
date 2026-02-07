@@ -1,5 +1,83 @@
-## VERSION 28 NOV 2025
-## AUTHOR Luis Sigcha
+"""
+===============================================================================
+Physical Behaviour and Energy Expenditure Prediction Utilities
+===============================================================================
+
+Version:
+--------
+28 November 2025
+
+Author:
+-------
+Luis Sigcha
+
+Description:
+------------
+This module provides utility functions for loading, processing, and analysing
+wearable sensor data for the prediction of:
+
+    - Physical Behaviour (PB)
+    - Energy Expenditure (EE)
+
+using machine learning models and data collected with activPAL and ActiGraph
+devices.
+
+The script supports multiple input formats, including:
+
+    - Uncompressed CSV files (.csv)
+    - Compressed activPAL files (.datx)
+    - Synchronized activPAL + ActiGraph CSV files
+
+It implements a complete processing pipeline comprising:
+
+    - Data loading and preprocessing
+    - Sliding-window segmentation
+    - Model-based inference
+    - Post-processing
+    - Label decoding and formatting
+
+Main Features:
+--------------
+- Automatic file format detection for activPAL data
+- Support for single-sensor and dual-sensor configurations
+- Window-based prediction of PB and EE
+- Robust error handling and validation
+- Compatibility with WEALTH project machine learning models
+
+Intended Use:
+-------------
+This code is intended for research, validation, and demonstration purposes
+within the context of digital phenotyping and wearable-based monitoring of
+physical activity.
+It is designed to support large-scale analysis pipelines and reproducible
+research workflows.
+
+License:
+--------
+MIT License
+
+Copyright (c) 2025 Luis Sigcha
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+===============================================================================
+"""
 
 ## Load the required packages
 #import mat73
