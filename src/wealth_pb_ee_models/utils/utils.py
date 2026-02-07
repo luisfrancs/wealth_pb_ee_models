@@ -85,7 +85,7 @@ def post_process(y_predict_proba):
     return y_pred
 
 #Single file procesing
-def predict_single_file_AP(file_name, model,encoding_dict_PB,encoding_dict_EE,sensor="AP",batch_size=512):
+def predict_single_file_AP_v1(file_name, model,encoding_dict_PB,encoding_dict_EE,sensor="AP",batch_size=512):
     ''' Performs a complete prediction pipe-line to a single file (ActivPAL 20 Hz from a .CSV uncrompressed file)
     Returns: Window based prediction as pandas dataframe with columns Time (time-stamps) and activity (as string) '''
     window_size=200 #60=3 seconds at 20 Hz
@@ -108,6 +108,78 @@ def predict_single_file_AP(file_name, model,encoding_dict_PB,encoding_dict_EE,se
     df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
     df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
     return df, X
+
+def predict_single_file_AP(file_name, model, encoding_dict_PB,  encoding_dict_EE, batch_size=512):
+    """
+    Performs a complete prediction pipeline for a single activPAL file.
+    Supported extensions: .csv, .datx
+
+    Returns:
+        df (pd.DataFrame): Window-based predictions with columns:
+            - Time
+            - activity (mapped to class names via encoding_dict_PB)
+            - Energy_expenditure (mapped to class names via encoding_dict_EE)
+        X (np.ndarray): Cropped signal aligned to the returned windows
+
+    Error handling:
+        - If path is not a file: raises FileNotFoundError
+        - If extension is not supported: raises ValueError
+        - If processing fails: raises RuntimeError
+    """
+    try:
+        if not isinstance(file_name, str) or not file_name.strip():
+            raise ValueError("Processing error: 'file_name' must be a non-empty string.")
+
+        if not os.path.isfile(file_name):
+            raise FileNotFoundError( f"Processing error: '{file_name}' is not a file or does not exist." )
+
+        _, ext = os.path.splitext(file_name)
+        ext = ext.lower()
+        window_size = 200  # 20 Hz → 10 s windows
+        overlap=0
+        # Load according to extension
+        if ext == ".csv":
+            X, time_stamps = load_data_AP_CSV(file_name=file_name)
+            y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, overlap=overlap)
+
+        elif ext == ".datx":
+            warnings.simplefilter("ignore")
+            X, time_stamps = load_data_AP_DATX(file_name=file_name)
+            y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, step_size=window_size)
+
+        else:
+            raise ValueError(
+                f"Processing error: unsupported file extension '{ext}'. "
+                "Only '.csv' and '.datx' are supported." )
+
+        # Physical Behaviour
+        y_predict_proba_PB = y_predict_proba["task_1"]
+        predictions_PB = post_process(y_predict_proba_PB)
+        # Energy Expenditure
+        y_predict_proba_EE = y_predict_proba["task_2"]
+        predictions_EE = post_process(y_predict_proba_EE)
+        # Window alignment
+        croped_shape = window_size * predictions_PB.shape[0]
+        cp_time_stamps = time_stamps[:croped_shape]
+        nu_time_stamps = cp_time_stamps[::window_size]
+        X = X[:croped_shape, :]
+        # Build dataframe
+        df = pd.DataFrame({
+            "Time": nu_time_stamps,
+            "activity": predictions_PB,
+            "Energy_expenditure": predictions_EE
+        })
+
+        # Map to class labels
+        df["activity"] = df["activity"].map(encoding_dict_PB)
+        df["Energy_expenditure"] = df["Energy_expenditure"].map(encoding_dict_EE)
+
+        return df, X
+
+    except (FileNotFoundError, ValueError, KeyError):
+        raise
+    except Exception as e:
+        raise RuntimeError(f"Processing error: {e}") from e
 
 def predict_single_file_AP_DATX(file_name, model, encoding_dict_PB,encoding_dict_EE,sensor="AP",batch_size=512):
     ''' Performs a complete prediction pipe-line to a single file (ActivPAL 20 Hz from a .DATX file)
