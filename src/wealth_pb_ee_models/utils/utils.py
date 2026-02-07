@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import warnings
 from wealth_pb_ee_models.utils import uos_update_LS
 
-
+## Load data utils
 def load_data_AP_AG_CSV(file_name="file.cvs"):
     data = np.loadtxt(file_name, delimiter=",", skiprows=2,usecols=(0,1,2,3,4,5,6),max_rows=None)#modify to accpet all data
     time_stamps=data[:,0]
@@ -19,32 +19,15 @@ def load_data_AP_AG_CSV(file_name="file.cvs"):
     return X,time_stamps
 
 def load_data_AP_CSV(file_name="file.csv"):
-    '''Load an ActivPAL file from CSV format (exportd as uncrompresedd).
+    '''Load an ActivPAL file from CSV format (exported as uncompresed csv).
     Returns: X triaxial sensor data; time_stamps'''
     data = np.loadtxt(file_name, delimiter=";", skiprows=2,usecols=(0,2,4,3),max_rows=144000)#modify to accpet all data
     time_stamps=data[:,0]
     X=data[:,1:4]
     return X,time_stamps
 
-def load_data_AP_AG_MAT(file_name="file.mat"):
-    mat = mat73.loadmat(file_name)#load v73 matlab files
-    time_stamps=mat['data']['data_AP'][:,0]
-    X=np.concatenate((mat['data']['data_AP'][:,1:4], mat['data']['data_AG']), axis=1 )#STACKED MULTITASK 
-    return X,time_stamps
-
-def load_data_SINGLE_SENSORS_MAT(file_name="file.mat", sensor="AP"):
-    mat = mat73.loadmat(file_name)  # load v7.3 MATLAB file
-    time_stamps = mat["data"]["data_AP"][:, 0]
-    if sensor.upper() == "AP":
-            X=mat['data']['data_AP'][:,1:4]#AP
-    elif sensor.upper() == "AG":
-            X=mat['data']['data_AG']#AG
-    else:
-        raise ValueError("sensor must be 'AP' or 'AG'")
-    return X, time_stamps
-
 def load_data_AP_DATX(file_name="file.datx"):
-    '''Load an ActivPAL file from a compressed .DATX file
+    '''Load an ActivPAL file from a compressed .datx file
         Returns: X triaxial sensor data; time_stamps'''
     # it uses an adapted version of the uos library to open directly the files
     activpal_data = uos_update_LS.ActivpalData(file_name)
@@ -53,6 +36,8 @@ def load_data_AP_DATX(file_name="file.datx"):
     X = activpal_data.signals.to_numpy() #get fullscale data as numpy
     #X[:, [2, 1]] = X[:, [1, 2]]#swap axis to harmonize with PALAnalysis export
     return X,time_stamps
+
+#Predict PB and EE utils
 
 def predict_PA(X, loaded_model, scaling_factor=1,window_size=200,step_size=200,batch_size=512):
     '''Makes predictions usign a triaxial data
@@ -79,8 +64,8 @@ def sliding_window_triaxial(signal, window_size, step_size):
     return windows
 
 def post_process(y_predict_proba):
-    ''' Implements: postprocesing tasks to Prediciton as probabilty
-    Returns: hard predictions encoded as integers'''
+    ''' Implements: post-processing tasks to Predicition as probability
+    Returns: hard predictions encoded as integers '''
     y_pred=np.argmax(y_predict_proba, axis=1)#get activity class from probability
     ##TO-DO MEDIAN FILTER
     return y_pred
@@ -109,7 +94,7 @@ def predict_single_file_AP_v1(file_name, model,encoding_dict_PB,encoding_dict_EE
     df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
     df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
     return df, X
-
+### ActivPAL
 def predict_single_file_AP(file_name, model, encoding_dict_PB,  encoding_dict_EE, batch_size=512):
     """
     Performs a complete prediction pipeline for a single activPAL file.
@@ -170,99 +155,24 @@ def predict_single_file_AP(file_name, model, encoding_dict_PB,  encoding_dict_EE
             "activity": predictions_PB,
             "Energy_expenditure": predictions_EE
         })
-
         # Map to class labels
         df["activity"] = df["activity"].map(encoding_dict_PB)
         df["Energy_expenditure"] = df["Energy_expenditure"].map(encoding_dict_EE)
-
         return df, X
 
     except (FileNotFoundError, ValueError, KeyError):
         raise
     except Exception as e:
         raise RuntimeError(f"Processing error: {e}") from e
+### actiGraph
 
-def predict_single_file_AP_DATX(file_name, model, encoding_dict_PB,encoding_dict_EE,sensor="AP",batch_size=512):
-    ''' Performs a complete prediction pipe-line to a single file (ActivPAL 20 Hz from a .DATX file)
-    Returns: Window based prediction as pandas dataframe with columns Time (tiem-stamps) and activity (as string) '''
-    warnings.simplefilter('ignore')
-    window_size=200 #60=3 seconds at 20 Hz
-    X,time_stamps=load_data_AP_DATX(file_name=file_name)#load AP data file
-    y_predict_proba=predict_PA(X, model,scaling_factor=1,window_size=window_size,step_size=window_size)#predict
-    #Physical Behaviour
-    y_predict_proba_PB=y_predict_proba['task_1']
-    predictions_PB=post_process(y_predict_proba_PB)#POST-PROCESSING
-    #ENERGY EXPENDITURE
-    y_predict_proba_EE=y_predict_proba['task_2']
-    predictions_EE=post_process(y_predict_proba_EE)#POST-PROCESSING
-    # Convert window prediction to df (window based prediction)
-    croped_shape=window_size*predictions_PB.shape[0]
-    cp_time_stamps = time_stamps[0:croped_shape]#crop to size
-    nu_time_stamps=cp_time_stamps[::window_size]#downsample time stamps
-    X=X[0:croped_shape,:]#crop to size
-    # Convert the NumPy array to a Pandas DataFrame
-    df = pd.DataFrame({'Time': nu_time_stamps, 'activity': predictions_PB, 'Energy_expenditure': predictions_EE})
-    #Transform using the mapping dictionary
-    df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
-    df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
-    return df, X
-
+### Dual sesnsor (ActivPAL+ actiGraph)
 def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,batch_size=512):
     ''' Performs a complete prediction pipe-line to a single file (ActivPAL and ActiGrap sincronized at 20 Hz)
     Returns: Window based prediction as pandas dataframe with columns Time (tiem-stamps) and activity (as string) '''
     warnings.simplefilter('ignore')
     window_size=200 #60=3 seconds at 20 Hz
     X,time_stamps=load_data_AP_AG_CSV(file_name=file_name)#load AP data file
-    y_predict_proba=predict_PA(X, model,scaling_factor=1,window_size=window_size,step_size=window_size)#predict
-    #Physical Behaviour
-    y_predict_proba_PB=y_predict_proba['task_1']
-    predictions_PB=post_process(y_predict_proba_PB)#POST-PROCESSING
-    #ENERGY EXPENDITURE
-    y_predict_proba_EE=y_predict_proba['task_2']
-    predictions_EE=post_process(y_predict_proba_EE)#POST-PROCESSING
-    # Convert window prediction to df (window based prediction)
-    croped_shape=window_size*predictions_PB.shape[0]
-    cp_time_stamps = time_stamps[0:croped_shape]#crop to size
-    nu_time_stamps=cp_time_stamps[::window_size]#downsample time stamps
-    X=X[0:croped_shape,:]#crop to size
-    # Convert the NumPy array to a Pandas DataFrame
-    df = pd.DataFrame({'Time': nu_time_stamps, 'activity': predictions_PB, 'Energy_expenditure': predictions_EE})
-    #Transform using the mapping dictionary
-    df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
-    df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
-    return df, X
-
-def predict_file_AP_AG_MAT(file_name, model,encoding_dict_PB,encoding_dict_EE,batch_size=512):
-    ''' Performs a complete prediction pipe-line to a single file (ActivPAL and ActiGrap sincronized at 20 Hz)
-    Returns: Window based prediction as pandas dataframe with columns Time (tiem-stamps) and activity (as string) '''
-    warnings.simplefilter('ignore')
-    window_size=200 #60=3 seconds at 20 Hz
-    X,time_stamps=load_data_AP_AG_MAT(file_name=file_name)#load AP data file
-    y_predict_proba=predict_PA(X, model,scaling_factor=1,window_size=window_size,step_size=window_size)#predict
-    #Physical Behaviour
-    y_predict_proba_PB=y_predict_proba['task_1']
-    predictions_PB=post_process(y_predict_proba_PB)#POST-PROCESSING
-    #ENERGY EXPENDITURE
-    y_predict_proba_EE=y_predict_proba['task_2']
-    predictions_EE=post_process(y_predict_proba_EE)#POST-PROCESSING
-    # Convert window prediction to df (window based prediction)
-    croped_shape=window_size*predictions_PB.shape[0]
-    cp_time_stamps = time_stamps[0:croped_shape]#crop to size
-    nu_time_stamps=cp_time_stamps[::window_size]#downsample time stamps
-    X=X[0:croped_shape,:]#crop to size
-    # Convert the NumPy array to a Pandas DataFrame
-    df = pd.DataFrame({'Time': nu_time_stamps, 'activity': predictions_PB, 'Energy_expenditure': predictions_EE})
-    #Transform using the mapping dictionary
-    df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
-    df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
-    return df, X
-
-def predict_file_SINGLE_SENSORS_MAT(file_name, model,encoding_dict_PB,encoding_dict_EE,sensor="AP",batch_size=512):
-    ''' Performs a complete prediction pipe-line to a single file (ActivPAL and ActiGrap sincronized at 20 Hz)
-    Returns: Window based prediction as pandas dataframe with columns Time (tiem-stamps) and activity (as string) '''
-    warnings.simplefilter('ignore')
-    window_size=200 #60=3 seconds at 20 Hz
-    X,time_stamps=load_data_SINGLE_SENSORS_MAT(file_name=file_name,sensor=sensor)#load AP or AG data
     y_predict_proba=predict_PA(X, model,scaling_factor=1,window_size=window_size,step_size=window_size)#predict
     #Physical Behaviour
     y_predict_proba_PB=y_predict_proba['task_1']
