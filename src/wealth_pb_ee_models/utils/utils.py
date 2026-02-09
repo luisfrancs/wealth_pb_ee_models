@@ -117,7 +117,7 @@ def load_data_AP_DATX(file_name="file.datx"):
     #X[:, [2, 1]] = X[:, [1, 2]]#swap axis to harmonize with PALAnalysis export
     return X,time_stamps
 
-def load_data_AG(file_name="file.datx"):
+def load_data_AG(file_name="file.gt3x"):
     '''Load an actigraph file (.gt3x) and downsample to 20 Hz
         Returns: X triaxial sensor data; time_stamps'''
     actigraph_data,fs = read_gt3x_file_with_fs(file_name) #reads data as df['time','X','Y','Z']
@@ -135,12 +135,8 @@ def downsample_actigraph_to_20hz(df, fs, time_col="time"):
     """
     Downsample ActiGraph data to 20 Hz while preserving original timestamps.
     Supported source rates: 100 Hz, 30 Hz.
-    Args:
-        df (pd.DataFrame): Columns [time_col, X, Y, Z]
-        fs (int): Source sampling rate (100 or 30)
-        time_col (str): Timestamp column name
     Returns:
-        pd.DataFrame: Downsampled data at ~20 Hz with real timestamps
+        pd.DataFrame: Downsampled data at ~20 Hz with timestamps
     """
     if fs not in (100, 30):
         raise ValueError(f"Unsupported sampling rate: {fs} Hz (supported: 100, 30)." )
@@ -150,17 +146,12 @@ def downsample_actigraph_to_20hz(df, fs, time_col="time"):
     xyz = df[["X", "Y", "Z"]].to_numpy(dtype=float)
     
     if fs == 100:
-        # Signal: decimation
-        xyz_ds = signal.decimate(xyz,5,axis=0,zero_phase=True )
-        # Time: direct subsampling
-        t_ds = time_job.iloc[::5].to_numpy()
+        xyz_ds = signal.decimate(xyz,5,axis=0,zero_phase=True )  # Signal: decimation
+        t_ds = time_job.iloc[::5].to_numpy()  # Time: direct subsampling
     elif fs == 30:
-        # Signal: polyphase resampling (2/3)
-        xyz_ds = signal.resample_poly(xyz,up=2, down=3, axis=0)
-        # Time: index mapping
-        idx = np.linspace(0, len(time_job) - 1, xyz_ds.shape[0] ).astype(int)
+        xyz_ds = signal.resample_poly(xyz,up=2, down=3, axis=0)  # Signal: polyphase resampling (2/3)
+        idx = np.linspace(0, len(time_job) - 1, xyz_ds.shape[0] ).astype(int)  # Time: index mapping
         t_ds = time_job.iloc[idx].to_numpy()
-
     # Build output DataFrame
     out = pd.DataFrame(xyz_ds, columns=["X", "Y", "Z"] )
     out.insert(0, "time", t_ds)
@@ -176,17 +167,17 @@ def predict_PA(X, loaded_model, scaling_factor=1,window_size=200,step_size=200,b
     y_pred = loaded_model.predict(X_split,batch_size=batch_size)#Predic over all data file
     return y_pred
 
-def sliding_window_triaxial(signal, window_size, step_size):
+def sliding_window_triaxial(xyz, window_size, step_size):
     """step_size (int): Step size between windows.
     Returns: Array of sliding windows of shape (num_windows, window_size, 3).    """
     #Get number of channels (deafult 3)
-    channels=signal.shape[-1]
+    channels=xyz.shape[-1]
     # Calculate the number of windows
-    num_windows = (signal.shape[0] - window_size) // step_size + 1
+    num_windows = (xyz.shape[0] - window_size) // step_size + 1
     if num_windows <= 0:
         raise ValueError("Invalid combination of window size and step size for the given signal length.")
     # Create sliding windows
-    windows = np.lib.stride_tricks.sliding_window_view(signal, (window_size, channels))
+    windows = np.lib.stride_tricks.sliding_window_view(xyz, (window_size, channels))
     # Extract and reshape windows to remove the singleton dimension
     windows = windows[::step_size, :, :]  # Select windows with the specified step size
     windows = windows.reshape(-1, window_size, channels)  # Reshape to (num_windows, window_size, 3)
@@ -229,28 +220,23 @@ def predict_single_file_AP(file_name, model, encoding_dict_PB,  encoding_dict_EE
         _, ext = os.path.splitext(file_name)
         ext = ext.lower()
         window_size = 200  # 20 Hz → 10 s windows
-        overlap=0
+        step_size=200
         # Load according to extension
         if ext == ".csv":
             X, time_stamps = load_data_AP_CSV(file_name=file_name)
-            y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, overlap=overlap)
-
         elif ext == ".datx":
             warnings.simplefilter("ignore")
             X, time_stamps = load_data_AP_DATX(file_name=file_name)
-            y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, step_size=window_size)
-
         else:
             raise ValueError(
                 f"Processing error: unsupported file extension '{ext}'. "
                 "Only '.csv' and '.datx' are supported." )
-
+        # Predict    
+        y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, step_size=step_size)
         # Physical Behaviour
-        y_predict_proba_PB = y_predict_proba["task_1"]
-        predictions_PB = post_process(y_predict_proba_PB)
+        predictions_PB = post_process(y_predict_proba["task_1"])
         # Energy Expenditure
-        y_predict_proba_EE = y_predict_proba["task_2"]
-        predictions_EE = post_process(y_predict_proba_EE)
+        predictions_EE = post_process(y_predict_proba["task_2"])
         # Window alignment
         croped_shape = window_size * predictions_PB.shape[0]
         cp_time_stamps = time_stamps[:croped_shape]
@@ -302,11 +288,11 @@ def predict_single_file_AG(file_name, model, encoding_dict_PB, encoding_dict_EE,
                 "Only '.gt3x' files are supported." )
 
         window_size = 200  # 20 Hz → 10 s windows
-        overlap = 0
+        step_size= 200
         # Load ActiGraph GT3X
         X, time_stamps = load_data_AG(file_name=file_name)#Load and applies downsampling
         # Predict
-        y_predict_proba = predict_PA(X,model, scaling_factor=1,window_size=window_size, overlap=overlap, batch_size=batch_size)
+        y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, step_size=step_size)
         # Physical Behaviour
         predictions_PB = post_process(y_predict_proba["task_1"])
         # Energy Expenditure
