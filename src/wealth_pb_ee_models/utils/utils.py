@@ -93,7 +93,7 @@ from scipy import signal
 
 ## Load data utils
 def load_data_AP_AG_CSV(file_name="file.cvs"):
-    data = np.loadtxt(file_name, delimiter=",", skiprows=2,usecols=(0,1,2,3,4,5,6),max_rows=None)#modify to accpet all data
+    data = np.loadtxt(file_name, delimiter=",", skiprows=2,usecols=(0,1,2,3,4,5,6),max_rows=None)
     time_stamps=data[:,0]
     X=data[:,1:7]
     return X,time_stamps
@@ -101,7 +101,7 @@ def load_data_AP_AG_CSV(file_name="file.cvs"):
 def load_data_AP_CSV(file_name="file.csv"):
     '''Load an ActivPAL file from CSV format (exported as uncompresed csv).
     Returns: X triaxial sensor data; time_stamps'''
-    data = np.loadtxt(file_name, delimiter=";", skiprows=2,usecols=(0,2,4,3),max_rows=144000)#modify to accpet all data
+    data = np.loadtxt(file_name, delimiter=";", skiprows=2,usecols=(0,2,4,3),max_rows=None)
     time_stamps=data[:,0]
     X=data[:,1:4]
     return X,time_stamps
@@ -168,8 +168,18 @@ def predict_PA(X, loaded_model, scaling_factor=1,window_size=200,step_size=200,b
     return y_pred
 
 def sliding_window_triaxial(xyz, window_size, step_size):
-    """step_size (int): Step size between windows.
-    Returns: Array of sliding windows of shape (num_windows, window_size, 3).    """
+    """
+    Segment a triaxial signal into overlapping sliding windows.
+    Args:
+        xyz (np.ndarray): Input signal of shape (n_samples, n_channels),
+            where n_channels is usually 3 (X, Y, Z).
+        window_size (int):  Number of samples per window.
+        step_size (int): Number of samples between the start of consecutive windows
+    Returns:
+        np.ndarray: Array of windows with shape (num_windows, window_size, n_channels).
+    Raises:
+        ValueError: If the signal length is too short for the given window and step size.
+    """
     #Get number of channels (deafult 3)
     channels=xyz.shape[-1]
     # Calculate the number of windows
@@ -190,21 +200,18 @@ def post_process(y_predict_proba):
     ##TO-DO MEDIAN FILTER
     return y_pred
 
-#Single file processing
-
+#SINGLE FILE PROCESSING
 ### ActivPAL
 def predict_single_file_AP(file_name, model, encoding_dict_PB,  encoding_dict_EE, batch_size=512):
     """
     Performs a complete prediction pipeline for a single activPAL file.
     Supported extensions: .csv, .datx
-
     Returns:
         df (pd.DataFrame): Window-based predictions with columns:
             - Time
             - activity (mapped to class names via encoding_dict_PB)
             - Energy_expenditure (mapped to class names via encoding_dict_EE)
         X (np.ndarray): Cropped signal aligned to the returned windows
-
     Error handling:
         - If path is not a file: raises FileNotFoundError
         - If extension is not supported: raises ValueError
