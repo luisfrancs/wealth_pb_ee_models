@@ -266,57 +266,6 @@ def summarize_weekday_weekend(df, pb_cols,ee_cols, id_col= "ID", date_col = "dat
 
     return summary
 
-
-#to erase
-def summarize_weekday_weekend_weighted_V1(df, pb_cols, ee_cols,
-                                       id_col="ID", date_col="date",
-                                       w_weekday=5/7, w_weekend=2/7):
-    """    Summarise activity per participant using a weighted average
-    of weekday and weekend statistics.
-    Weighting:
-        - Weekdays: 5/7
-        - Weekends: 2/7
-    Returns one row per ID with weighted mean and SD per variable.
-    """
-    df = df.copy()
-    df[date_col] = pd.to_datetime(df[date_col])
-
-    # Weekday vs weekend
-    df["day_type"] = np.where(df[date_col].dt.weekday < 5, "Weekday", "Weekend")
-    vars_to_sum = pb_cols + ee_cols
-    # ---- statistics (mean & SD) ----
-    stats = (
-        df
-        .groupby([id_col, "day_type"])[vars_to_sum]
-        .agg(["mean", "std"])
-        .unstack("day_type")
-    )
-
-    frames = []
-    for var in vars_to_sum:
-        mean_wd = stats[(var, "mean", "Weekday")]
-        mean_we = stats[(var, "mean", "Weekend")]
-        std_wd  = stats[(var, "std", "Weekday")]
-        std_we  = stats[(var, "std", "Weekend")]
-
-        weighted_mean = w_weekday * mean_wd + w_weekend * mean_we
-        weighted_std  = w_weekday * std_wd  + w_weekend * std_we
-
-        frames.append(
-            pd.DataFrame({
-                id_col: weighted_mean.index,
-                f"{var}_mean": weighted_mean.values,
-                f"{var}_std": weighted_std.values
-            })
-        )
-
-    # ---- merge all variables ----
-    summary = reduce(
-        lambda left, right: pd.merge(left, right, on=id_col),
-        frames )
-
-    return summary
-
 def summarize_weekday_weekend_weighted(
     df,
     pb_cols,
@@ -341,7 +290,13 @@ def summarize_weekday_weekend_weighted(
     """
     df = df.copy()
     df[date_col] = pd.to_datetime(df[date_col])
-
+        
+    # ---- check number of subjects ----
+    n_subjects = df[id_col].nunique()
+    if n_subjects <= 1:
+        raise ValueError(
+            f"At least two subjects are required for summarization. "
+            f"Found {n_subjects} unique subject."  )
     # ---- weekday vs weekend ----
     df["day_type"] = np.where(df[date_col].dt.weekday < 5, "Weekday", "Weekend")
 
