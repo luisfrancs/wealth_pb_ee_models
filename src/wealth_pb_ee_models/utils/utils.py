@@ -321,8 +321,8 @@ def predict_single_file_AG(file_name, model, encoding_dict_PB, encoding_dict_EE,
         
 ### Dual sensor (ActivPAL+ actiGraph)
 def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,batch_size=512):
-    ''' Performs a complete prediction pipe-line to a single file (ActivPAL and ActiGrap sincronized at 20 Hz)
-    Returns: Window based prediction as pandas dataframe with columns Time (tiem-stamps) and activity (as string) '''
+    ''' Performs a complete prediction pipe-line to a single file (ActivPAL and ActiGrap synchronized at 20 Hz)
+    Returns: Window-based prediction as a pandas dataframe with columns Time (time-stamps) and activity (as string) '''
     warnings.simplefilter('ignore')
     window_size=200 #60=3 seconds at 20 Hz
     X,time_stamps=load_data_AP_AG_CSV(file_name=file_name)#load AP data file
@@ -333,7 +333,7 @@ def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,ba
     #Energy expenditure
     y_predict_proba_EE=y_predict_proba['task_2']
     predictions_EE=post_process(y_predict_proba_EE)#POST-PROCESSING
-    # Convert window prediction to df (window based prediction)
+    # Convert window prediction to df (window-based prediction)
     croped_shape=window_size*predictions_PB.shape[0]
     cp_time_stamps = time_stamps[0:croped_shape]#crop to size
     nu_time_stamps=cp_time_stamps[::window_size]#downsample time stamps
