@@ -111,7 +111,7 @@ wealth_pb_ee_models/
 ├── pyproject.toml
 ├── README.md
 └── LICENSE
-
+```
 ## Example Notebooks (Google Colab)
 
 Example notebooks are provided in the `notebooks/` directory.
@@ -124,9 +124,7 @@ They are designed to be executed in **Google Colab**.
 2. Select **File → Save a copy in Drive**  
 3. Run and modify your private copy  
 
-This ensures that the repository version remains unchanged.
-
-Colab badges and direct links may be added to this section.
+[![Run in Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/luisfrancs/wealth_pb_ee_models/blob/main/examples/ActivePAL_Daily_prediction_GITHUB_FINAL.ipynb)
 
 ---
 
@@ -134,13 +132,28 @@ Colab badges and direct links may be added to this section.
 
 The models are based on multitask learning approaches combining:
 
-- Random Forest models with engineered features  
 - Multi-Head Convolutional Neural Networks (MH-CNN)  
 
 They were developed and validated using long-term free-living data from the WEALTH project.
 
 The methodological foundations are described in peer-reviewed and preprint publications associated with the WEALTH consortium.
 
+---
+
+## Publications
+
+If you use this software, please cite the following publications:
+
+1. Sigcha L, et al.  
+   **Data Labelling for Free-Living Physical Activity Recognition using Thigh-Worn Wearables and Event-based Ecological Momentary Assessment.**  
+   *Research Square*, 2025 (Preprint).  
+   (https://www.researchsquare.com/article/rs-6835979/v1)
+
+2. Hayes G, et al.  
+   **Standardized Methods for Evaluating Physical and Eating Behaviours: The WEALTH Project.**  
+   *JMIR Research Protocols*, 2024 (Preprint).  
+   https://preprints.jmir.org/preprint/70186
+   
 ---
 
 ## Data Availability
@@ -156,19 +169,6 @@ This repository provides:
 - Demonstration datasets in `sample_data/`  
 
 These resources support reproducibility and methodological validation.
-
----
-
-## Reproducibility and Good Practice
-
-To ensure reproducible results:
-
-- Use the specified Python version (≥ 3.9)  
-- Install dependencies via `pyproject.toml`  
-- Run notebooks in isolated environments  
-- Document any parameter modifications  
-
-Versioned models and configuration files are provided where applicable.
 
 ---
 
@@ -202,7 +202,7 @@ If you use this software in academic work, please cite both this repository and 
 @software{wealth_pb_ee_models,
   author  = {Sigcha, Luis},
   title   = {wealth\_pb\_ee\_models: Machine Learning Models for Physical Behaviour and Energy Expenditure Estimation},
-  year    = {2025},
+  year    = {2026},
   url     = {https://github.com/luisfrancs/wealth_pb_ee_models}
 }
 
