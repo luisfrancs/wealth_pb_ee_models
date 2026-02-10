@@ -24,8 +24,9 @@ devices.
 
 The script supports multiple input formats, including:
 
-    - Uncompressed CSV files (.csv)
     - Compressed activPAL files (.datx)
+    - Uncompressed activPAL CSV files (.csv)
+    - Uncompressed ActiGraph GT3X files (.gt3x)
     - Synchronized activPAL + ActiGraph CSV files
 
 It implements a complete processing pipeline comprising:
