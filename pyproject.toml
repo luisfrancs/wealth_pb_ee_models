@@ -13,9 +13,10 @@ dependencies = [
     "pandas",
     "scikit-learn",
     "joblib",
+    "pygt3x",
 ]
 authors = [
-    { name = "Luis", email = "luisfrancs@gmail.com" }
+    { name = "Luis Sigcha", email = "luisfrancs@gmail.com" }
 ]
 license = { text = "MIT" }
 
