@@ -78,9 +78,7 @@ THE SOFTWARE.
 
 ===============================================================================
 """
-
 ## Load the required packages
-#import mat73
 import os
 import scipy.io
 import numpy as np
@@ -91,7 +89,7 @@ from wealth_pb_ee_models.utils import uos_update_LS
 from wealth_pb_ee_models.utils.actigraph_read import read_gt3x_file_with_fs
 from scipy import signal
 
-## Load data utils
+## Loading data functions
 def load_data_AP_AG_CSV(file_name="file.cvs"):
     data = np.loadtxt(file_name, delimiter=",", skiprows=2,usecols=(0,1,2,3,4,5,6),max_rows=None)
     time_stamps=data[:,0]
@@ -109,12 +107,12 @@ def load_data_AP_CSV(file_name="file.csv"):
 def load_data_AP_DATX(file_name="file.datx"):
     '''Load an ActivPAL file from a compressed .datx file
         Returns: X triaxial sensor data; time_stamps'''
-    # it uses an adapted version of the uos library to open directly the files
+    # It uses an adapted version of the uos library to open the files
     activpal_data = uos_update_LS.ActivpalData(file_name)
     time_stamps=activpal_data.timestamps
     time_stamps=time_stamps.to_numpy()
     X = activpal_data.signals.to_numpy() #get fullscale data as numpy
-    #X[:, [2, 1]] = X[:, [1, 2]]#swap axis to harmonize with PALAnalysis export
+    #X[:, [2, 1]] = X[:, [1, 2]]#swap axis to harmonize with PALAnalysis exports
     return X,time_stamps
 
 def load_data_AG(file_name="file.gt3x"):
@@ -157,7 +155,7 @@ def downsample_actigraph_to_20hz(df, fs, time_col="time"):
     out.insert(0, "time", t_ds)
     return out
 
-#Predict PB and EE utils
+#Predict PB and EE
 
 def predict_PA(X, loaded_model, scaling_factor=1,window_size=200,step_size=200,batch_size=512):
     '''Makes predictions usign a triaxial data
@@ -180,7 +178,7 @@ def sliding_window_triaxial(xyz, window_size, step_size):
     Raises:
         ValueError: If the signal length is too short for the given window and step size.
     """
-    #Get number of channels (deafult 3)
+    #Get number of channels (default 3)
     channels=xyz.shape[-1]
     # Calculate the number of windows
     num_windows = (xyz.shape[0] - window_size) // step_size + 1
@@ -194,7 +192,7 @@ def sliding_window_triaxial(xyz, window_size, step_size):
     return windows
 
 def post_process(y_predict_proba):
-    ''' Implements: post-processing tasks to Predicition as probability
+    ''' Implements: post-processing tasks on the raw predictions
     Returns: hard predictions encoded as integers '''
     y_pred=np.argmax(y_predict_proba, axis=1)#get activity class from probability
     ##TO-DO MEDIAN FILTER
@@ -321,7 +319,7 @@ def predict_single_file_AG(file_name, model, encoding_dict_PB, encoding_dict_EE,
     except Exception as e:
         raise RuntimeError(f"Processing error: {e}") from e
         
-### Dual sesnsor (ActivPAL+ actiGraph)
+### Dual sensor (ActivPAL+ actiGraph)
 def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,batch_size=512):
     ''' Performs a complete prediction pipe-line to a single file (ActivPAL and ActiGrap sincronized at 20 Hz)
     Returns: Window based prediction as pandas dataframe with columns Time (tiem-stamps) and activity (as string) '''
@@ -332,7 +330,7 @@ def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,ba
     #Physical Behaviour
     y_predict_proba_PB=y_predict_proba['task_1']
     predictions_PB=post_process(y_predict_proba_PB)#POST-PROCESSING
-    #ENERGY EXPENDITURE
+    #Energy expenditure
     y_predict_proba_EE=y_predict_proba['task_2']
     predictions_EE=post_process(y_predict_proba_EE)#POST-PROCESSING
     # Convert window prediction to df (window based prediction)
