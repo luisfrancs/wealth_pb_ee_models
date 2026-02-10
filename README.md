@@ -31,7 +31,7 @@ The package supports multiple input formats:
 - Raw files: `.gt3x`
 
 ### Combined Data
-- Synchronized activPAL + ActiGraph CSV files (synchronized data should be provided at 20 Hz)
+- Synchronized activPAL + ActiGraph CSV files (Synchronized data should be provided at a sampling frequency of 20 Hz): `.csv`
 
 ---
 
@@ -91,6 +91,17 @@ cd wealth_pb_ee_models
 pip install -e .
 
 ```
+### Dependencies
+
+Main dependencies include:
+
+- NumPy  
+- Pandas  
+- Scikit-learn  
+- Joblib  
+- pygt3x  
+
+All dependencies are defined in `pyproject.toml`.
 ---
 
 ## Package Structure
