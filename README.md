@@ -90,6 +90,8 @@ git clone https://github.com/luisfrancs/wealth_pb_ee_models.git
 cd wealth_pb_ee_models
 pip install -e .
 
+```
+---
 
 ## Package Structure
 
