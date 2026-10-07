@@ -160,11 +160,16 @@ If you use this software, please cite the following publications:
    *Research Square*, 2025 (Preprint).  
    (https://www.researchsquare.com/article/rs-6835979/v1)
 
-2. Hayes G, et al.  
-   **Standardized Methods for Evaluating Physical and Eating Behaviours: The WEALTH Project.**  
-   *JMIR Research Protocols*, 2024 (Preprint).  
-   https://preprints.jmir.org/preprint/70186
-   
+2. Sigcha L, et al.  
+   **Robust Assessment of Free-Living Physical Behaviors and Activity Intensity Using Dual-Wearable Multitask Learning: Development and Evaluation Study From the Multicenter WEALTH Project.**  
+   *JMIR mHealth and uHealth*. 2026;14:e94302.  
+   https://doi.org/10.2196/94302
+
+3. Hayes G, et al.  
+   **Standardized Methods for Evaluating Physical and Eating Behaviors: The WEALTH Cross-Sectional Study Protocol.**  
+   *JMIR Research Protocols*. 2026;15:e70186.  
+   https://doi.org/10.2196/70186
+
 ---
 
 ## Data Availability
