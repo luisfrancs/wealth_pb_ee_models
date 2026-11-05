@@ -39,7 +39,7 @@ The package supports multiple wearable devices and input formats.
 
 - Standard CSV files: `.csv`
 
-Wrist-worn data should be provided in the expected three-axis accelerometer format and meet the sampling frequency and preprocessing requirements of the corresponding pretrained model.
+Wrist-worn data should be provided in the expected three-axis accelerometer format and meet the sampling frequency (20 Hz) and preprocessing requirements of the corresponding pretrained model.
 
 ### Combined Data (Dual Sensor)
 
