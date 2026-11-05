@@ -105,6 +105,14 @@ def load_data_AP_CSV(file_name="file.csv"):
     X=data[:,1:4]
     return X,time_stamps
 
+def load_data_SW_CSV(file_name="file.csv"):
+    '''Load an wirstwtach file from CSV format (sample rate of 20Hz is assumed, frist column must be timestamps).
+    Returns: X triaxial sensor data; time_stamps'''
+    data = np.loadtxt(file_name, delimiter=";", skiprows=2,usecols=(0,1,2,3),max_rows=None)
+    time_stamps=data[:,0]
+    X=data[:,1:4]
+    return X,time_stamps
+
 def load_data_AP_DATX(file_name="file.datx"):
     '''Load an ActivPAL file from a compressed .datx file
         Returns: X triaxial sensor data; time_stamps'''
@@ -345,3 +353,67 @@ def predict_file_AP_AG_CSV(file_name, model,encoding_dict_PB,encoding_dict_EE,ba
     df['activity'] = df['activity'].map(encoding_dict_PB)#encode numeric predictions to class
     df['Energy_expenditure'] = df['Energy_expenditure'].map(encoding_dict_EE)#encode numeric predictions to class
     return df, X
+
+
+def predict_single_file_SW(file_name, model, encoding_dict_PB, encoding_dict_EE, batch_size=512):
+    """
+    Performs a complete prediction pipeline for a wrist sensors accelerometer CSV file (20 Hz sample rate is expected).
+
+    Supported extensions: .csv
+
+    Returns:
+        df (pd.DataFrame): Window-based predictions with columns:
+            - Time
+            - activity (mapped to class names via encoding_dict_PB)
+            - Energy_expenditure (mapped to class names via encoding_dict_EE)
+
+        X (np.ndarray): Cropped signal aligned to the returned windows.
+
+    Error handling:
+        - If path is not a file: raises FileNotFoundError
+        - If extension is not supported: raises ValueError
+        - If processing fails: raises RuntimeError
+    """
+    try:
+        if not isinstance(file_name, str) or not file_name.strip():
+            raise ValueError("Processing error: 'file_name' must be a non-empty string.")
+
+        if not os.path.isfile(file_name):
+            raise FileNotFoundError( f"Processing error: '{file_name}' is not a file or does not exist.")
+        _, ext = os.path.splitext(file_name)
+        ext = ext.lower()
+        
+        if ext != ".csv":
+            raise ValueError( f"Processing error: unsupported file extension '{ext}'. "
+                "Only '.csv' files are supported."      )
+
+        window_size = 200  # 20 Hz -> 10 s windows
+        step_size = 200
+        # Load standard accelerometer data
+        X, time_stamps = load_data_SW_CSV(file_name=file_name)
+        # Predict
+        y_predict_proba = predict_PA(X, model, scaling_factor=1, window_size=window_size, step_size=step_size)
+        # Physical Behaviour
+        predictions_PB = post_process(y_predict_proba["task_1"])
+        # Energy Expenditure
+        predictions_EE = post_process(y_predict_proba["task_2"])
+        # Window alignment
+        cropped_shape = window_size * predictions_PB.shape[0]
+        cp_time_stamps = time_stamps[:cropped_shape]
+        nu_time_stamps = cp_time_stamps[::window_size]
+        X = X[:cropped_shape, :]
+        # Build dataframe
+        df = pd.DataFrame({
+            "Time": nu_time_stamps,
+            "activity": predictions_PB,
+            "Energy_expenditure": predictions_EE
+        })
+        # Map numeric predictions to class labels
+        df["activity"] = df["activity"].map(encoding_dict_PB)
+        df["Energy_expenditure"] = df["Energy_expenditure"].map(encoding_dict_EE)
+        return df, X
+
+    except (FileNotFoundError, ValueError, KeyError):
+        raise
+    except Exception as e:
+        raise RuntimeError(f"Processing error: {e}") from e
