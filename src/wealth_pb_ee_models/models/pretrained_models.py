@@ -26,3 +26,17 @@ def multi_taks_7classes_AG():
     encoding_dict_PB = {0:'Sitting', 1:'Standing', 2:'Walking', 3:'Running', 4:'Sports', 5:'Cycling', 6:'Lying'}
     encoding_dict_EE = {0:'Sedentary', 1:'LPA', 2:'MVPA'}
     return loaded_model, encoding_dict_PB, encoding_dict_EE
+
+def multi_taks_7classes_SW():
+    # Load model
+    loaded_model = tf.keras.models.load_model(_THIS_DIR /'MODEL_nuWIDECNN_SK_SINGLE_macmetal_2026-10-11_15-21-36_f1score_0.426_updated.h5')
+    encoding_dict_PB = {0:'Sitting', 1:'Standing', 2:'Walking', 3:'Running', 4:'Sports', 5:'Cycling', 6:'Lying'}
+    encoding_dict_EE = {0:'Sedentary', 1:'LPA', 2:'MVPA'}
+    return loaded_model, encoding_dict_PB, encoding_dict_EE
+
+def multi_taks_6classes_SW():
+    # Load model
+    loaded_model = tf.keras.models.load_model(_THIS_DIR /'MODEL_nuWIDE_SK_6class2026_SINGLE_macmetal_2026-10-29_17-33-14_f1score_0.483_model_updated.h5')
+    encoding_dict_PB = {0:'Sitting', 1:'Standing', 2:'Walking', 3:'Running', 4:'Cycling', 5:'Lying'}
+    encoding_dict_EE = {0:'Sedentary', 1:'LPA', 2:'MVPA'}
+    return loaded_model, encoding_dict_PB, encoding_dict_EE
