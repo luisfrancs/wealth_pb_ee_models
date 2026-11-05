@@ -5,7 +5,7 @@ Physical Behaviour and Energy Expenditure Prediction Utilities
 
 Version:
 --------
-7 February 2026
+5 November 2026
 
 Author:
 -------
